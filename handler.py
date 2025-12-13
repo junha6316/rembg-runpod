@@ -3,10 +3,24 @@ import requests
 from io import BytesIO
 from PIL import Image
 import base64
+import os
 from rembg import remove, new_session
 
 
+# Set up persistent volume path for model caching
+VOLUME_PATH = "/runpod-volume"
+MODEL_CACHE_PATH = os.path.join(VOLUME_PATH, "models") if os.path.exists(VOLUME_PATH) else None
+
+# Set environment variable for model cache if persistent volume exists
+if MODEL_CACHE_PATH:
+    os.makedirs(MODEL_CACHE_PATH, exist_ok=True)
+    os.environ["U2NET_HOME"] = MODEL_CACHE_PATH
+    print(f"Using persistent volume for model cache: {MODEL_CACHE_PATH}")
+else:
+    print("No persistent volume detected, using ephemeral storage")
+
 # Initialize BiRefNet-HRSOD session globally
+# Models will be cached in persistent volume if available
 session = new_session("birefnet-hrsod")
 
 
