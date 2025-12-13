@@ -15,10 +15,14 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Download BiRefNet-HRSOD model during build to reduce cold start time
+# This provides a fallback if persistent volume is not available
 RUN python -c "from rembg import new_session; new_session('birefnet-hrsod')"
 
 # Copy handler code
 COPY handler.py .
+
+# Create directory for persistent volume mount point
+RUN mkdir -p /runpod-volume
 
 # Set the entrypoint
 CMD ["python", "-u", "handler.py"]
