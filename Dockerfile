@@ -14,9 +14,11 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Download BiRefNet-HRSOD model during build to reduce cold start time
-# This provides a fallback if persistent volume is not available
-RUN python -c "from rembg import new_session; new_session('birefnet-hrsod')"
+# Create model cache directory and download BiRefNet-HRSOD model into the image
+# This ensures fast cold starts even without persistent volume
+RUN mkdir -p /app/models
+ENV U2NET_HOME=/app/models
+RUN python -c "from rembg import new_session; session = new_session('birefnet-hrsod'); print('Model downloaded successfully')"
 
 # Copy handler code
 COPY handler.py .

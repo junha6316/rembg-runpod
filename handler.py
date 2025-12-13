@@ -7,20 +7,23 @@ import os
 from rembg import remove, new_session
 
 
-# Set up persistent volume path for model caching
+# Set up model cache path
+# Priority: 1) Persistent volume 2) Built-in models in image
 VOLUME_PATH = "/runpod-volume"
-MODEL_CACHE_PATH = os.path.join(VOLUME_PATH, "models") if os.path.exists(VOLUME_PATH) else None
+BUILTIN_MODEL_PATH = "/app/models"
 
-# Set environment variable for model cache if persistent volume exists
-if MODEL_CACHE_PATH:
+if os.path.exists(VOLUME_PATH):
+    # Use persistent volume if available (best for multi-worker scenarios)
+    MODEL_CACHE_PATH = os.path.join(VOLUME_PATH, "models")
     os.makedirs(MODEL_CACHE_PATH, exist_ok=True)
     os.environ["U2NET_HOME"] = MODEL_CACHE_PATH
     print(f"Using persistent volume for model cache: {MODEL_CACHE_PATH}")
 else:
-    print("No persistent volume detected, using ephemeral storage")
+    # Use built-in models from Docker image
+    os.environ["U2NET_HOME"] = BUILTIN_MODEL_PATH
+    print(f"Using built-in model cache from image: {BUILTIN_MODEL_PATH}")
 
 # Initialize BiRefNet-HRSOD session globally
-# Models will be cached in persistent volume if available
 session = new_session("birefnet-hrsod")
 
 
