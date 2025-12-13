@@ -1,5 +1,5 @@
 runpod
-rembg[gpu]
 requests
 Pillow
-onnxruntime-gpu
+onnxruntime-gpu==1.16.3
+rembg[gpu]
