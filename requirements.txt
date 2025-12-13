@@ -1,0 +1,5 @@
+runpod
+rembg[gpu]
+requests
+Pillow
+onnxruntime-gpu
