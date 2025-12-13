@@ -20,7 +20,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # This ensures fast cold starts even without persistent volume
 RUN mkdir -p /app/models
 ENV U2NET_HOME=/app/models
-RUN python -c "from rembg import new_session; session = new_session('birefnet-hrsod'); print('Model downloaded successfully')"
 
 # Copy handler code
 COPY handler.py .
