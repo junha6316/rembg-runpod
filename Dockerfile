@@ -4,10 +4,12 @@ FROM runpod/pytorch:2.1.0-py3.10-cuda11.8.0-devel-ubuntu22.04
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies including cuDNN
 RUN apt-get update && apt-get install -y \
     libgl1-mesa-glx \
     libglib2.0-0 \
+    libcudnn8 \
+    libcudnn8-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies
