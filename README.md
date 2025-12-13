@@ -22,15 +22,33 @@ docker build -t your-dockerhub-username/rembg-runpod:latest .
 docker push your-dockerhub-username/rembg-runpod:latest
 ```
 
-### 2. Deploy to RunPod
+### 2. Create Network Volume (Recommended)
+
+Persistent volume을 사용하면 모델 파일을 캐싱하여 cold start 시간을 크게 단축할 수 있습니다.
+
+1. Go to [RunPod Storage](https://www.runpod.io/console/serverless/user/storage)
+2. Click "Create Network Volume"
+3. Configure:
+   - **Name**: `rembg-models` (또는 원하는 이름)
+   - **Size**: 10GB 이상 권장
+   - **Region**: Endpoint와 같은 region 선택
+4. Create
+
+### 3. Deploy to RunPod
 
 1. Go to [RunPod Serverless](https://www.runpod.io/console/serverless)
 2. Click "New Endpoint"
 3. Configure:
    - **Container Image**: `your-dockerhub-username/rembg-runpod:latest`
    - **GPU Type**: Select GPU (recommended: RTX 3090 or better)
+   - **Network Volume**: Select the volume created in step 2 (선택사항이지만 강력 권장)
    - **Workers**: Configure auto-scaling as needed
 4. Deploy
+
+**참고**: Network Volume을 연결하면:
+- 첫 실행 시 모델이 `/runpod-volume/models`에 다운로드됨
+- 이후 실행에서는 캐시된 모델을 재사용하여 cold start 시간 단축
+- Volume 없이도 동작하지만, 매번 모델을 다운로드해야 함
 
 ## API Usage
 
