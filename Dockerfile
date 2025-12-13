@@ -1,5 +1,5 @@
-# Use RunPod's official PyTorch GPU image
-FROM runpod/pytorch:2.1.0-py3.10-cuda11.8.0-devel-ubuntu22.04
+# Use RunPod's official PyTorch GPU image with CUDA 12.1
+FROM runpod/pytorch:2.1.1-py3.10-cuda12.1.0-devel-ubuntu22.04
 
 # Set working directory
 WORKDIR /app
