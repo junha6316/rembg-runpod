@@ -4,3 +4,5 @@ Pillow
 numpy<2.0.0
 onnxruntime-gpu==1.18.1
 rembg
+fastapi
+uvicorn

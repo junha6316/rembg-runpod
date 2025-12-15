@@ -1,10 +1,12 @@
-import runpod
+from fastapi import FastAPI
+from pydantic import BaseModel
 import requests
 from io import BytesIO
 from PIL import Image
 import base64
 import os
 from rembg import remove, new_session
+import uvicorn
 
 
 # Set up model cache path
@@ -25,7 +27,14 @@ else:
 
 
 session = new_session("birefnet-hrsod")
-      
+
+# Initialize FastAPI app
+app = FastAPI()
+
+
+class RemoveBackgroundRequest(BaseModel):
+    image_url: str
+    return_base64: bool = True
 
 
 def download_image(url):
@@ -42,16 +51,21 @@ def image_to_base64(image):
     return base64.b64encode(buffered.getvalue()).decode()
 
 
-def handler(event):
+@app.get("/ping")
+async def health_check():
+    """Health check endpoint required for load balancing"""
+    return {"status": "healthy"}
+
+
+@app.post("/remove-background")
+async def remove_background(request: RemoveBackgroundRequest):
     """
-    RunPod handler function for background removal
+    Remove background from image
 
     Input format:
     {
-        "input": {
-            "image_url": "https://example.com/image.jpg",
-            "return_base64": true  # optional, default: true
-        }
+        "image_url": "https://example.com/image.jpg",
+        "return_base64": true  # optional, default: true
     }
 
     Output format:
@@ -62,18 +76,15 @@ def handler(event):
     """
     try:
         print('start removing background image')
-        # Extract input parameters
-        input_data = event.get("input", {})
-        image_url = input_data.get("image_url")
-        return_base64 = input_data.get("return_base64", True)
 
-        if not image_url:
+        if not request.image_url:
             return {
-                "error": "image_url is required in input"
+                "error": "image_url is required"
             }
+
         print('download image')
         # Download image from URL
-        input_image = download_image(image_url)
+        input_image = download_image(request.image_url)
 
         # Remove background using BiRefNet-HRSOD
         print('get session')
@@ -82,7 +93,7 @@ def handler(event):
 
         print('return image')
         # Convert to base64 if requested
-        if return_base64:
+        if request.return_base64:
             image_base64 = image_to_base64(output_image)
             return {
                 "image_base64": image_base64,
@@ -108,5 +119,6 @@ def handler(event):
 
 
 if __name__ == "__main__":
-    print("JOB RECEIVED") 
-    runpod.serverless.start({"handler": handler})
+    print("Starting FastAPI server for load balancing...")
+    port = int(os.getenv("PORT", "80"))
+    uvicorn.run(app, host="0.0.0.0", port=port)
