@@ -28,7 +28,7 @@ RUN pip install --no-cache-dir \
     pooch \
     tqdm \
     aiohttp \
-    rembg[gpu]==2.0.50 --no-deps
+    rembg[gpu]==2.0.50 
 
 # Create model cache directory and download BiRefNet-HRSOD model into the image
 # This ensures fast cold starts even without persistent volume
