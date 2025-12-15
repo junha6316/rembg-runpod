@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 
 # Install dependencies in correct order to avoid numpy 2.x
 # 1. Install numpy 1.x first
-RUN pip install --no-cache-dir "numpy==1.26.4"
+RUN pip install --no-cache-dir numpy==1.26.4
 
 # 2. Install onnxruntime-gpu for CUDA 11.8 from special repository
 RUN pip install --no-cache-dir onnxruntime-gpu==1.18.1 --index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-11/pypi/simple/
