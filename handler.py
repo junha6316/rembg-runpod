@@ -22,17 +22,10 @@ else:
     os.environ["U2NET_HOME"] = BUILTIN_MODEL_PATH
     print(f"Using built-in model cache from image: {BUILTIN_MODEL_PATH}")
 
-session = None
-def get_session():
-    try:
-        global session
-        if session:
-            return session
-        # Initialize BiRefNet-HRSOD session globally
-        session = new_session("birefnet-hrsod")
-        return session 
-    except Exception as e:
-        print(e)
+
+
+session = new_session("birefnet-hrsod")
+      
 
 
 def download_image(url):
@@ -84,7 +77,6 @@ def handler(event):
 
         # Remove background using BiRefNet-HRSOD
         print('get session')
-        session = get_session()
         output_image = remove(input_image, session=session)
         print('remove success')
 
@@ -116,4 +108,5 @@ def handler(event):
 
 
 if __name__ == "__main__":
+    print("JOB RECEIVED") 
     runpod.serverless.start({"handler": handler})
