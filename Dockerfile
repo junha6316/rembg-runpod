@@ -14,7 +14,10 @@ RUN apt-get update && apt-get install -y \
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install onnxruntime-gpu for CUDA 11.8 from special repository
+RUN pip install --no-cache-dir numpy\<2.0.0 requests Pillow runpod
+RUN pip install --no-cache-dir onnxruntime-gpu==1.18.1 --index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-11/pypi/simple/
+RUN pip install --no-cache-dir rembg
 
 # Create model cache directory and download BiRefNet-HRSOD model into the image
 # This ensures fast cold starts even without persistent volume
@@ -23,9 +26,6 @@ ENV U2NET_HOME=/app/models
 
 # Copy handler code
 COPY handler.py .
-
-# Create directory for persistent volume mount point
-RUN mkdir -p /runpod-volume
 
 # Set the entrypoint
 CMD ["python", "-u", "handler.py"]

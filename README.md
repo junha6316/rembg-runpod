@@ -175,9 +175,18 @@ Common errors:
 
 ## Performance
 
-- Cold start: ~10-20 seconds (model pre-downloaded in image)
-- Warm inference: ~1-3 seconds per image (depends on image size and GPU)
-- Recommended GPU: RTX 3090 or higher
+### With Persistent Volume (Recommended)
+- First cold start: ~15-25 seconds (모델 다운로드 포함)
+- Subsequent cold starts: ~3-5 seconds (캐시된 모델 사용)
+- Warm inference: ~1-3 seconds per image
+
+### Without Persistent Volume
+- Cold start: ~15-25 seconds (매번 모델 다운로드)
+- Warm inference: ~1-3 seconds per image
+
+**권장 사양**:
+- GPU: RTX 3090 or higher
+- Network Volume: 10GB+ (persistent volume 사용 시)
 
 ## License
 

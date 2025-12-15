@@ -9,11 +9,10 @@ from rembg import remove, new_session
 
 # Set up model cache path
 # Priority: 1) Persistent volume 2) Built-in models in image
-VOLUME_PATH = "/runpod-volume"
+VOLUME_PATH = ""
 BUILTIN_MODEL_PATH = "/app/models"
 
 if os.path.exists(VOLUME_PATH):
-    # Use persistent volume if available (best for multi-worker scenarios)
     MODEL_CACHE_PATH = os.path.join(VOLUME_PATH, "models")
     os.makedirs(MODEL_CACHE_PATH, exist_ok=True)
     os.environ["U2NET_HOME"] = MODEL_CACHE_PATH
