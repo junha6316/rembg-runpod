@@ -13,14 +13,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install dependencies in correct order to avoid numpy 2.x
-# 1. Install numpy 1.x first
-RUN pip install --no-cache-dir numpy==1.26.4
 
 # 2. Install onnxruntime-gpu for CUDA 11.8 from special repository
 RUN pip install --no-cache-dir onnxruntime-gpu==1.18.1 --index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-11/pypi/simple/
 
 # 3. Install rembg dependencies manually to control versions
 RUN pip install --no-cache-dir \
+    numpy==1.26.4 \
     requests \
     Pillow \
     runpod \
@@ -28,10 +27,8 @@ RUN pip install --no-cache-dir \
     scikit-image \
     pooch \
     tqdm \
-    aiohttp
-
-# 4. Install rembg (will use already installed compatible numpy)
-RUN pip install --no-cache-dir rembg
+    aiohttp \
+    rembg
 
 # Create model cache directory and download BiRefNet-HRSOD model into the image
 # This ensures fast cold starts even without persistent volume
