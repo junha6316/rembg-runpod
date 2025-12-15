@@ -2,5 +2,5 @@ runpod
 requests
 Pillow
 numpy<2.0.0
-onnxruntime-gpu==1.15.1
+onnxruntime-gpu==1.18.1
 rembg
