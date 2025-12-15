@@ -68,6 +68,7 @@ def handler(event):
     }
     """
     try:
+        print('start removing background image')
         # Extract input parameters
         input_data = event.get("input", {})
         image_url = input_data.get("image_url")
@@ -77,14 +78,17 @@ def handler(event):
             return {
                 "error": "image_url is required in input"
             }
-
+        print('download image')
         # Download image from URL
         input_image = download_image(image_url)
 
         # Remove background using BiRefNet-HRSOD
+        print('get session')
         session = get_session()
         output_image = remove(input_image, session=session)
+        print('remove success')
 
+        print('return image')
         # Convert to base64 if requested
         if return_base64:
             image_base64 = image_to_base64(output_image)
