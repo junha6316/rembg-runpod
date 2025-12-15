@@ -35,13 +35,15 @@ app = FastAPI()
 class RemoveBackgroundRequest(BaseModel):
     image_url: str
     return_base64: bool = True
+    include_original: bool = False
 
 
 def download_image(url):
-    """Download image from URL"""
+    """Download image from URL and return PIL image plus raw bytes"""
     response = requests.get(url, timeout=30)
     response.raise_for_status()
-    return Image.open(BytesIO(response.content))
+    content = response.content
+    return Image.open(BytesIO(content)), content
 
 
 def image_to_base64(image):
@@ -49,6 +51,11 @@ def image_to_base64(image):
     buffered = BytesIO()
     image.save(buffered, format="PNG")
     return base64.b64encode(buffered.getvalue()).decode()
+
+
+def bytes_to_base64(data: bytes):
+    """Convert raw bytes to base64 string"""
+    return base64.b64encode(data).decode()
 
 
 @app.get("/ping")
@@ -65,13 +72,16 @@ async def remove_background(request: RemoveBackgroundRequest):
     Input format:
     {
         "image_url": "https://example.com/image.jpg",
-        "return_base64": true  # optional, default: true
+        "return_base64": true,  # optional, default: true
+        "include_original": false  # optional, default: false
     }
 
     Output format:
     {
-        "image_base64": "base64_encoded_image_data",
-        "format": "PNG"
+        "image_base64": "base64_encoded_image_data",  # or image_bytes when return_base64 is false
+        "format": "PNG",
+        "original_image_base64": "base64_encoded_original",  # or original_image_bytes when return_base64 is false
+        "original_format": "PNG"
     }
     """
     try:
@@ -84,7 +94,8 @@ async def remove_background(request: RemoveBackgroundRequest):
 
         print('download image')
         # Download image from URL
-        input_image = download_image(request.image_url)
+        input_image, original_bytes = download_image(request.image_url)
+        original_format = input_image.format or "PNG"
 
         # Remove background using BiRefNet-HRSOD
         print('get session')
@@ -92,21 +103,35 @@ async def remove_background(request: RemoveBackgroundRequest):
         print('remove success')
 
         print('return image')
+        original_payload = {}
+        if request.include_original:
+            if request.return_base64:
+                original_payload["original_image_base64"] = bytes_to_base64(original_bytes)
+            else:
+                original_payload["original_image_bytes"] = original_bytes
+            original_payload["original_format"] = original_format
+
         # Convert to base64 if requested
         if request.return_base64:
             image_base64 = image_to_base64(output_image)
-            return {
+            response_data = {
                 "image_base64": image_base64,
                 "format": "PNG"
             }
+            if request.include_original:
+                response_data.update(original_payload)
+            return response_data
         else:
             # Save to bytes and return
             buffered = BytesIO()
             output_image.save(buffered, format="PNG")
-            return {
+            response_data = {
                 "image_bytes": buffered.getvalue(),
                 "format": "PNG"
             }
+            if request.include_original:
+                response_data.update(original_payload)
+            return response_data
 
     except requests.exceptions.RequestException as e:
         return {
