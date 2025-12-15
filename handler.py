@@ -22,8 +22,17 @@ else:
     os.environ["U2NET_HOME"] = BUILTIN_MODEL_PATH
     print(f"Using built-in model cache from image: {BUILTIN_MODEL_PATH}")
 
-# Initialize BiRefNet-HRSOD session globally
-session = new_session("birefnet-hrsod")
+session = None
+def get_session():
+    try:
+        global session
+        if session:
+            return session
+        # Initialize BiRefNet-HRSOD session globally
+        session = new_session("birefnet-hrsod")
+        return session 
+    except Exception as e:
+        print(e)
 
 
 def download_image(url):
@@ -73,6 +82,7 @@ def handler(event):
         input_image = download_image(image_url)
 
         # Remove background using BiRefNet-HRSOD
+        session = get_session()
         output_image = remove(input_image, session=session)
 
         # Convert to base64 if requested
