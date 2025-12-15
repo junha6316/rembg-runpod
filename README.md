@@ -58,7 +58,9 @@ Persistent volume을 사용하면 모델 파일을 캐싱하여 cold start 시�
 {
   "input": {
     "image_url": "https://example.com/image.jpg",
-    "return_base64": true
+    "return_base64": true,
+    "include_original": false,
+    "model": "birefnet-hrsod"
   }
 }
 ```
@@ -67,13 +69,18 @@ Persistent volume을 사용하면 모델 파일을 캐싱하여 cold start 시�
 
 - `image_url` (required): URL of the image to process
 - `return_base64` (optional): Return base64 encoded image, default: true
+- `include_original` (optional): Return the original image alongside the processed result, default: false
+- `model` (optional): Model to use for background removal, default: `birefnet-hrsod`
 
 ### Response Format
 
 ```json
 {
   "image_base64": "iVBORw0KGgoAAAANSUhEUgAA...",
-  "format": "PNG"
+  "format": "PNG",
+  "original_image_base64": "iVBORw0KGgoAAAANSUhEUgAA...", // present when include_original is true
+  "original_format": "PNG",
+  "model": "birefnet-hrsod"
 }
 ```
 
@@ -97,7 +104,9 @@ def remove_background(image_url):
 
     payload = {
         "input": {
-            "image_url": image_url
+            "image_url": image_url,
+            # "model": "birefnet-hrsod",  # optional
+            # "include_original": False  # optional
         }
     }
 
@@ -128,6 +137,24 @@ curl -X POST "https://api.runpod.ai/v2/{your-endpoint-id}/runsync" \
     }
   }'
 ```
+
+### Supported Models
+
+- u2net
+- u2netp
+- u2net_human_seg
+- u2net_cloth_seg
+- silueta
+- isnet-general-use
+- isnet-anime
+- sam
+- birefnet-general
+- birefnet-general-lite
+- birefnet-portrait
+- birefnet-dis
+- birefnet-hrsod (default)
+- birefnet-cod
+- birefnet-massive
 
 ## Local Testing
 

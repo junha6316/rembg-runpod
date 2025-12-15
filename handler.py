@@ -9,6 +9,26 @@ from rembg import remove, new_session
 import uvicorn
 
 
+# Available rembg models
+MODELS = [
+    "u2net",
+    "u2netp",
+    "u2net_human_seg",
+    "u2net_cloth_seg",
+    "silueta",
+    "isnet-general-use",
+    "isnet-anime",
+    "sam",
+    "birefnet-general",
+    "birefnet-general-lite",
+    "birefnet-portrait",
+    "birefnet-dis",
+    "birefnet-hrsod",
+    "birefnet-cod",
+    "birefnet-massive",
+]
+DEFAULT_MODEL = "birefnet-hrsod"
+
 # Set up model cache path
 # Priority: 1) Persistent volume 2) Built-in models in image
 VOLUME_PATH = ""
@@ -25,8 +45,18 @@ else:
     print(f"Using built-in model cache from image: {BUILTIN_MODEL_PATH}")
 
 
+# Keep sessions cached per model to avoid reloading
+_sessions = {}
+_sessions[DEFAULT_MODEL] = new_session(DEFAULT_MODEL)
 
-session = new_session("birefnet-hrsod")
+
+def get_session(model_name: str):
+    """Get or create a cached session for the requested model"""
+    if model_name not in MODELS:
+        raise ValueError(f"Unsupported model: {model_name}")
+    if model_name not in _sessions:
+        _sessions[model_name] = new_session(model_name)
+    return _sessions[model_name]
 
 # Initialize FastAPI app
 app = FastAPI()
@@ -36,6 +66,7 @@ class RemoveBackgroundRequest(BaseModel):
     image_url: str
     return_base64: bool = True
     include_original: bool = False
+    model: str = DEFAULT_MODEL
 
 
 def download_image(url):
@@ -73,7 +104,8 @@ async def remove_background(request: RemoveBackgroundRequest):
     {
         "image_url": "https://example.com/image.jpg",
         "return_base64": true,  # optional, default: true
-        "include_original": false  # optional, default: false
+        "include_original": false,  # optional, default: false
+        "model": "birefnet-hrsod"  # optional, default: birefnet-hrsod
     }
 
     Output format:
@@ -81,7 +113,8 @@ async def remove_background(request: RemoveBackgroundRequest):
         "image_base64": "base64_encoded_image_data",  # or image_bytes when return_base64 is false
         "format": "PNG",
         "original_image_base64": "base64_encoded_original",  # or original_image_bytes when return_base64 is false
-        "original_format": "PNG"
+        "original_format": "PNG",
+        "model": "birefnet-hrsod"
     }
     """
     try:
@@ -92,14 +125,20 @@ async def remove_background(request: RemoveBackgroundRequest):
                 "error": "image_url is required"
             }
 
+        if request.model not in MODELS:
+            return {
+                "error": f"Unsupported model: {request.model}. Supported models: {', '.join(MODELS)}"
+            }
+
         print('download image')
         # Download image from URL
         input_image, original_bytes = download_image(request.image_url)
         original_format = input_image.format or "PNG"
 
-        # Remove background using BiRefNet-HRSOD
+        # Remove background using selected model
         print('get session')
-        output_image = remove(input_image, session=session)
+        model_session = get_session(request.model)
+        output_image = remove(input_image, session=model_session)
         print('remove success')
 
         print('return image')
@@ -116,7 +155,8 @@ async def remove_background(request: RemoveBackgroundRequest):
             image_base64 = image_to_base64(output_image)
             response_data = {
                 "image_base64": image_base64,
-                "format": "PNG"
+                "format": "PNG",
+                "model": request.model
             }
             if request.include_original:
                 response_data.update(original_payload)
@@ -127,7 +167,8 @@ async def remove_background(request: RemoveBackgroundRequest):
             output_image.save(buffered, format="PNG")
             response_data = {
                 "image_bytes": buffered.getvalue(),
-                "format": "PNG"
+                "format": "PNG",
+                "model": request.model
             }
             if request.include_original:
                 response_data.update(original_payload)
